@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 </title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            user-select: none;
+        }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(145deg, #1a2f3f 0%, #0f1c26 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 48px;
+            padding: 2.5rem 2rem;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: white;
+        }
+        h1 {
+            font-weight: 400;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            margin: 0 0 0.2rem 0;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .sub {
+            opacity: 0.7;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px dashed rgba(255,255,255,0.2);
+            padding-bottom: 1rem;
+        }
+        .dice-box {
+            background: rgba(10, 20, 30, 0.7);
+            border-radius: 40px;
+            padding: 1.8rem;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 8px 12px rgba(0,0,0,0.5);
+        }
+        .result-number {
+            font-size: 7rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #ffd966;
+            text-shadow: 0 0 20px #ffb347, 0 0 40px #ff8c00;
+            transition: all 0.2s;
+        }
+        .hint {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem;
+            color: #b0d4ff;
+        }
+        .timer {
+            background: #00000030;
+            border-radius: 60px;
+            padding: 0.8rem 1.5rem;
+            display: inline-block;
+            font-size: 2.2rem;
+            font-weight: 700;
+            border: 1px solid #ffffff30;
+            backdrop-filter: blur(4px);
+            margin-bottom: 1.5rem;
+            color: #f0f9ff;
+        }
+        .timer span {
+            font-size: 1rem;
+            opacity: 0.7;
+            margin-right: 6px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        button {
+            background: #2d4b65;
+            border: none;
+            border-radius: 60px;
+            padding: 1rem 2.2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #0f1a22, 0 10px 20px rgba(0,0,0,0.3);
+            transition: all 0.08s linear;
+            border: 1px solid #ffffff30;
+            flex: 1 1 auto;
+            min-width: 200px;
+        }
+        button:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #0f1a22, 0 8px 16px rgba(0,0,0,0.5);
+        }
+        button:disabled {
+            opacity: 0.4;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #0f1a22;
+            pointer-events: none;
+            filter: grayscale(0.6);
+        }
+        .manual-hint {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            background: #00000040;
+            padding: 8px 16px;
+            border-radius: 40px;
+            display: inline-block;
+            border: 1px dashed #ffffff40;
+            color: #ccc;
+        }
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            background: #00000040;
+            padding: 8px 12px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .footer-note code {
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 20px;
+            color: #ffb86b;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎲 骰子</h1>
+        <div class="sub">手动刷新 · 超时锁定</div>
+
+        <!-- 骰子结果显示区 -->
+        <div class="dice-box">
+            <div class="result-number" id="diceResult">⚀</div>
+            <div class="hint" id="resultText">摇一次试试</div>
+        </div>
+
+        <!-- 倒计时显示器 -->
+        <div class="timer" id="timerDisplay">
+            <span>⏳</span> 3s
+        </div>
+
+        <!-- 只剩一个摇骰子按钮 (刷新按钮已移除) -->
+        <div class="button-group">
+            <button id="rollBtn" class="roll-btn">🎲 摇骰子</button>
+        </div>
+
+        <!-- 手动刷新提示 (取代之前的刷新按钮) -->
+        <div class="manual-hint">
+            ⏰ 超时后按钮会锁定，请手动刷新页面 
+        </div>
+
+        <!-- 隐秘修改点提示 -->
+        <div class="footer-note">
+            💡 <code>cheatMode</code>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // ★★★★★ 整蛊控制开关 ★★★★★
+        // 修改下方的 cheatMode 值即可控制骰子结果范围：
+        // - 当 cheatMode = 'friend' 时，骰子只会出现 1,2,3 （整蛊朋友模式）
+        // - 当 cheatMode = 'me'    时，骰子只会出现 4,5,6 （自己使用模式）
+        // 修改后保存文件，然后手动刷新页面，等待3秒倒计时内摇骰子即可生效。
+        // =========================================================================
+        let cheatMode = 'friend';   // 默认整蛊朋友（1-3），改为 'me' 则自己用（4-6）
+        // =========================================================================
+
+        // ---------- DOM 元素 ----------
+        const diceResultEl = document.getElementById('diceResult');
+        const resultTextEl = document.getElementById('resultText');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const rollBtn = document.getElementById('rollBtn');
+
+        // ---------- 状态变量 ----------
+        let rolled = false;             // 是否已经摇过
+        let countdown = 3;              // 当前倒计时秒数
+        let intervalId = null;          // 倒计时定时器
+        let timeoutId = null;           // 超时锁定定时器 (替代原来的自动刷新)
+
+        // ---------- 辅助函数：停止所有计时器 ----------
+        function stopAllTimers() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        }
+
+        // ---------- 倒计时超时后的处理：锁定按钮，不再自动刷新 ----------
+        function handleTimeout() {
+            stopAllTimers();                     // 清除任何残余计时器
+            rollBtn.disabled = true;              // 禁用按钮
+            timerDisplay.innerHTML = `<span>⏰</span> 超时`;  // 显示超时
+            // 注意：rolled 保持原样，但按钮disabled已经阻止点击
+            console.log('⏳ 超时，按钮已锁定，请手动刷新页面');
+        }
+
+        // ---------- 开始3秒倒计时（超时后锁定按钮，不刷新）----------
+        function startCountdown() {
+            // 重置倒计时数值
+            countdown = 3;
+            timerDisplay.innerHTML = `<span>⏳</span> ${countdown}s`;
+
+            // 每秒更新倒计时
+            intervalId = setInterval(() => {
+                countdown -= 1;
+                timerDisplay.innerHTML = `<span>⏳</span> ${countdown}s`;
+
+                // 倒计时归零 → 锁定按钮（不再自动刷新）
+                if (countdown <= 0) {
+                    handleTimeout();
+                }
+            }, 1000);
+
+            // 设置一个3秒后的超时锁定函数（和interval配合，确保即使interval延迟也能锁定）
+            timeoutId = setTimeout(() => {
+                // 如果倒计时还没归零（极少数情况），强制锁定
+                if (countdown > 0) {
+                    countdown = 0;
+                    handleTimeout();
+                }
+            }, 3000);
+        }
+
+        // ---------- 页面加载初始化 ----------
+        function initOnLoad() {
+            // 重置摇骰子状态
+            rolled = false;
+            // 启用摇骰子按钮
+            rollBtn.disabled = false;
+            // 停止之前可能残留的计时器
+            stopAllTimers();
+            // 开始全新的3秒倒计时
+            startCountdown();
+
+            // 把骰子显示还原为初始符号
+            diceResultEl.textContent = '⚀';
+            resultTextEl.textContent = '等待摇骰...';
+        }
+
+        // ---------- 摇骰子主要逻辑 ----------
+        function handleRoll() {
+            // 禁止重复摇：如果已经摇过 或 按钮被禁用
+            if (rolled || rollBtn.disabled) return;
+
+            // 立即标记已摇，并禁用按钮
+            rolled = true;
+            rollBtn.disabled = true;
+
+            // 停止所有计时器（阻止倒计时继续或超时锁定）
+            stopAllTimers();
+
+            // 倒计时显示改为“已摇”，不再走动
+            timerDisplay.innerHTML = `<span>🎲</span> 已摇`;
+
+            // --- 根据 cheatMode 生成骰子点数 ---
+            let diceValue;
+            if (cheatMode === 'me') {
+                // 自己模式：4,5,6
+                diceValue = Math.floor(Math.random() * 3) + 4;  // 4~6
+            } else {
+                // 默认朋友模式：1,2,3 （包括 'friend' 以及其他任何值）
+                diceValue = Math.floor(Math.random() * 3) + 1;  // 1~3
+            }
+
+            // 更新骰子显示（Unicode骰子面 + 数字）
+            const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            diceResultEl.textContent = diceFaces[diceValue - 1];
+            resultTextEl.textContent = `点数：${diceValue}`;
+
+            // --- 随机播放 1.mp3 / 2.mp3 / 3.mp3 中的一个 ---
+            const randomMusic = Math.floor(Math.random() * 3) + 1;  // 1,2,3
+            const audio = new Audio(randomMusic + '.mp3');
+            audio.play().catch(err => {
+                console.log(`[整蛊] 音频 ${randomMusic}.mp3 播放失败 (可能文件不存在):`, err);
+                // 静默失败，不影响整蛊体验
+            });
+
+            // 控制台偷偷打印当前模式
+            console.log(`🎲 摇出点数: ${diceValue} (当前模式: ${cheatMode === 'me' ? '自己模式(4-6)' : '朋友模式(1-3)'})，播放音乐: ${randomMusic}.mp3`);
+        }
+
+        // ---------- 事件绑定 ----------
+        rollBtn.addEventListener('click', handleRoll);
+
+        // 页面加载时初始化
+        window.addEventListener('load', initOnLoad);
+
+        // 当页面通过前进/后退从bfcache恢复时，重新初始化
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                initOnLoad();
+            }
+        });
+
+        // 友情提示
+        console.log('👀 整蛊开关已就绪，快去找源码开头的 cheatMode 变量！');
+    </script>
+
+    <!-- 
+        ==============================================
+        重要修改说明（整蛊朋友必看）：
+        1. 找到上面 JavaScript 开头的 
+           “let cheatMode = 'friend';” 
+        2. 将 'friend' 改成 'me' 并保存文件。
+        3. 手动刷新页面，在3秒倒计时内点击“摇骰子”即可摇出 4,5,6。
+        4. 如果想让朋友只能摇出1-3，改回 'friend' 保存并手动刷新即可。
+        ==============================================
+
+        音频文件：请将 1.mp3, 2.mp3, 3.mp3 放在和本HTML相同的文件夹内，
+                 摇骰子后会随机播放其中一个。若文件缺失，不影响骰子功能。
+    -->
+</body>
+</html>
